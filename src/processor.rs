@@ -1,6 +1,6 @@
+use crate::errors::{bad_protocol, error_for, event_not_found};
+use crate::events::{parse_event, ResponseEvent};
 use crate::store::EventStore;
-use crate::events::{ResponseEvent, RequestEvent, Event};
-use crate::errors::{error_for, event_not_found, bad_protocol};
 
 pub struct EventProcessor {
     store: Box<dyn EventStore>,
@@ -21,23 +21,15 @@ impl EventProcessor {
                 if let Some(handler) = option_handler {
                     match handler.handle(&event) {
                         Ok(response) => response,
-                        Err(err) => error_for(&event, &err)
+                        Err(err) => error_for(&event, &err),
                     }
                 } else {
                     event_not_found(&event)
                 }
             }
-            Err(err) => bad_protocol(err)
+            Err(err) => bad_protocol(err),
         }
     }
 }
 
-fn parse_event(payload: &str) -> Result<RequestEvent, serde_json::Error> {
-    match serde_json::from_str::<Event>(payload) {
-        Ok(event) => {
-            //todo: write a event validator to validate that its a valid event
-            Ok(RequestEvent(event))
-        }
-        Err(err) => Err(err)
-    }
-}
+

@@ -1,8 +1,8 @@
-use std::collections::HashMap;
-use crate::events::{RequestEvent, ResponseEvent, Event};
-use uuid::Uuid;
-use serde_json::Value::Null;
+use crate::events::{Event, RequestEvent, ResponseEvent};
 use serde_json::json;
+use serde_json::Value::Null;
+use std::collections::HashMap;
+use uuid::Uuid;
 
 pub struct Error {
     err: Box<EventError>,
@@ -37,7 +37,7 @@ impl EventErrorType {
             EventErrorType::UserDenied => "userDenied",
             EventErrorType::ResourceDenied => "resourceDenied",
             EventErrorType::Expired => "expired",
-            EventErrorType::Unknown(value) => value.as_str()
+            EventErrorType::Unknown(value) => value.as_str(),
         }
     }
 }

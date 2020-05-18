@@ -1,8 +1,8 @@
+mod errors;
 mod events;
+mod handlers;
 mod processor;
 mod store;
-mod handlers;
-mod errors;
 
 #[cfg(test)]
 mod tests {
@@ -11,4 +11,3 @@ mod tests {
         assert_eq!(2 + 2, 4);
     }
 }
-

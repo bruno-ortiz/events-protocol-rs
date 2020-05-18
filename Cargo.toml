@@ -10,3 +10,6 @@ edition = "2018"
 serde_json = "1.0.53"
 serde = "1.0.110"
 uuid = { version = "0.8.1", features = ["serde", "v4"] }
+
+[dev-dependencies]
+spectral = "0.6.0"

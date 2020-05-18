@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::fmt::Display;
 
 use serde::Deserialize;
@@ -6,8 +5,8 @@ use serde::export::Formatter;
 use serde::Serialize;
 use serde_json::json;
 use serde_json::Value;
-use serde_json::Value::Null;
 use uuid::Uuid;
+
 use crate::errors::Error;
 
 #[derive(Serialize, Deserialize)]
@@ -33,7 +32,20 @@ impl Display for ResponseEvent {
     }
 }
 
-fn response_for<T: Serialize>(event: &RequestEvent, payload: T) -> Result<ResponseEvent, Error> {
+pub fn parse_event(payload: &str) -> Result<RequestEvent, serde_json::Error> {
+    match serde_json::from_str::<Event>(payload) {
+        Ok(event) => {
+            //todo: write a event validator to validate that its a valid event
+            Ok(RequestEvent(event))
+        }
+        Err(err) => Err(err),
+    }
+}
+
+pub fn response_for<T: Serialize>(
+    event: &RequestEvent,
+    payload: T,
+) -> Result<ResponseEvent, Error> {
     let evt = &event.0;
     Ok(ResponseEvent(Event {
         name: format!("{}:{}", evt.name, "response"),
@@ -45,31 +57,4 @@ fn response_for<T: Serialize>(event: &RequestEvent, payload: T) -> Result<Respon
         auth: json!({}),
         metadata: json!({}),
     }))
-}
-
-
-#[cfg(test)]
-mod tests {
-    use crate::store::SimpleEventStore;
-    use crate::events::response_for;
-    use crate::processor::EventProcessor;
-
-    #[test]
-    fn test_can_add_event_handler() {
-        let mut store = SimpleEventStore::new();
-        store.add("event:test", 1, |req| response_for(req, "ok"));
-
-        let processor = EventProcessor::new(Box::new(store));
-        let response_event = processor.process_event(r#"{
-                    "name": "event:test",
-                    "version": 1,
-                    "id": "f467e03c-abab-4c2f-b4cf-4871fd349c6e",
-                    "flowId": "cb745ef4-863b-41c4-99c7-325fe2b2b7f8",
-                    "payload": {},
-                    "metadata": {},
-                    "identity": {   },
-                    "auth": {}
-                }"#);
-        println!("response: {}", response_event)
-    }
 }
