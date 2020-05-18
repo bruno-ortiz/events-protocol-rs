@@ -1,6 +1,5 @@
 use crate::errors::Error;
 use crate::events::{RequestEvent, ResponseEvent};
-use std::ops::Deref;
 
 pub trait EventHandler {
     fn handle(&self, event: &RequestEvent) -> Result<ResponseEvent, Error>;

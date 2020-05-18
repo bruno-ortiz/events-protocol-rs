@@ -3,17 +3,21 @@ use serde_json::json;
 use serde_json::Value::Null;
 use std::collections::HashMap;
 use uuid::Uuid;
+use std::fmt::{Debug, Display, Formatter};
 
+#[derive(Debug)]
 pub struct Error {
     err: Box<EventError>,
 }
 
+#[derive(Debug)]
 pub struct EventError {
     error_type: EventErrorType,
     code: String,
     parameters: HashMap<String, String>, //todo: rever valor do mapa
 }
 
+#[derive(Debug)]
 pub enum EventErrorType {
     Generic,
     BadRequest,
@@ -39,6 +43,12 @@ impl EventErrorType {
             EventErrorType::Expired => "expired",
             EventErrorType::Unknown(value) => value.as_str(),
         }
+    }
+}
+
+impl Display for Error {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "error type: {:?}, code: {:?}", self.err.error_type, self.err.code)
     }
 }
 

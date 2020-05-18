@@ -66,9 +66,10 @@ mod tests {
                 }"#).unwrap();
 
         let option = store.handler_for("event:test", 1);
-
-
         assert_that(&option).is_some();
+        let response = option.unwrap().handle(&req).unwrap();
+
+        assert_that(&response.0.payload.as_str().unwrap()).is_equal_to("ok")
     }
 
 
