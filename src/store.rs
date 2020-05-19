@@ -3,39 +3,43 @@ use std::collections::HashMap;
 use crate::errors::Error;
 use crate::events::{RequestEvent, ResponseEvent};
 use crate::handlers::{EventHandler, FnForwardHandler};
+use std::ops::Deref;
 
 pub trait EventStore {
-    fn handler_for<'a>(
-        &'a self,
-        event_name: &'a str,
+    fn handler_for(
+        &self,
+        event_name: &str,
         version: u16,
-    ) -> Option<&'a Box<dyn EventHandler>>;
+    ) -> Option<&dyn EventHandler>;
 }
 
-pub struct SimpleEventStore {
-    handlers: HashMap<(&'static str, u16), Box<dyn EventHandler>>,
+pub struct SimpleEventStore<'a> {
+    handlers: HashMap<(String, u16), Box<dyn EventHandler + 'a>>,
 }
 
-impl SimpleEventStore {
+impl<'a> SimpleEventStore<'a> {
     pub fn new() -> Self {
         SimpleEventStore {
             handlers: HashMap::new(),
         }
     }
 
-    pub fn add<T>(&mut self, name: &'static str, version: u16, handler: T)
-        where T: Fn(&RequestEvent) -> Result<ResponseEvent, Error> + 'static {
-        self.handlers.insert((name, version), Box::new(FnForwardHandler::new(handler)));
+    pub fn add<T>(&mut self, name: &str, version: u16, handler: T)
+        where T: Fn(&RequestEvent) -> Result<ResponseEvent, Error> + 'a {
+        self.handlers.insert((String::from(name), version), Box::new(FnForwardHandler::new(handler)));
     }
 }
 
-impl EventStore for SimpleEventStore {
-    fn handler_for<'a>(
-        &'a self,
-        event_name: &'a str,
+impl<'a> EventStore for SimpleEventStore<'a> {
+    fn handler_for(
+        &self,
+        event_name: &str,
         version: u16,
-    ) -> Option<&'a Box<dyn EventHandler>> {
-        self.handlers.get(&(event_name, version))
+    ) -> Option<&dyn EventHandler>{
+        match self.handlers.get(&(String::from(event_name), version)) {
+            Some(handler) => Some(handler.deref()),
+            None => None,
+        }
     }
 }
 
