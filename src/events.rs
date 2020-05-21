@@ -9,7 +9,7 @@ use uuid::Uuid;
 
 use crate::errors::Error;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Event {
     pub name: String,
@@ -22,15 +22,11 @@ pub struct Event {
     pub metadata: Value,
 }
 
+#[derive(Debug)]
 pub struct RequestEvent(pub Event);
 
+#[derive(Debug)]
 pub struct ResponseEvent(pub Event);
-
-impl Display for ResponseEvent {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", serde_json::to_string(&self.0).unwrap())
-    }
-}
 
 pub fn parse_event(payload: &str) -> Result<RequestEvent, serde_json::Error> {
     match serde_json::from_str::<Event>(payload) {
@@ -50,8 +46,8 @@ pub fn response_for<T: Serialize>(
     Ok(ResponseEvent(Event {
         name: format!("{}:{}", evt.name, "response"),
         version: evt.version,
-        id: evt.id,
-        flow_id: evt.flow_id,
+        id: Uuid::from(evt.id),
+        flow_id: Uuid::from(evt.flow_id),
         payload: serde_json::to_value(payload).unwrap(), //todo: tratar esse result
         identity: json!({}),
         auth: json!({}),

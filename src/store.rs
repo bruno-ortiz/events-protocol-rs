@@ -35,7 +35,7 @@ impl<'a> EventStore for SimpleEventStore<'a> {
         &self,
         event_name: &str,
         version: u16,
-    ) -> Option<&dyn EventHandler>{
+    ) -> Option<&dyn EventHandler> {
         match self.handlers.get(&(String::from(event_name), version)) {
             Some(handler) => Some(handler.deref()),
             None => None,
@@ -45,8 +45,6 @@ impl<'a> EventStore for SimpleEventStore<'a> {
 
 #[cfg(test)]
 mod tests {
-    use spectral::prelude::*;
-
     use crate::events::{parse_event, response_for};
     use crate::store::{EventStore, SimpleEventStore};
     use serde::export::fmt::Debug;
@@ -70,16 +68,20 @@ mod tests {
                 }"#).unwrap();
 
         let option = store.handler_for("event:test", 1);
-        assert_that(&option).is_some();
-        let response = option.unwrap().handle(&req).unwrap();
+        assert!(option.is_some(), "Could no find event handler");
 
-        assert_that(&response.0.payload.as_str().unwrap()).is_equal_to("ok")
+        let handler = option.unwrap();
+        let result = handler.handle(&req);
+
+        assert!(result.is_ok(), "Error executing handler. Error: {:?}", result);
+        let response = result.unwrap();
+        assert_eq!("ok", response.0.payload.as_str().unwrap())
     }
 
-
-    impl Debug for dyn EventHandler {
-        fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-            write!(f, "Handler")
-        }
+    #[test]
+    fn test_cannot_find_event_handler() {
+        let mut store = SimpleEventStore::new();
+        let option = store.handler_for("event:test", 1);
+        assert!(option.is_none());
     }
 }
