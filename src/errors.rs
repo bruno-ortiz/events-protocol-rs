@@ -41,29 +41,29 @@ impl EventErrorType {
 
     pub fn error_type(&self) -> &str {
         match self {
-            EventErrorType::Generic(_) => "error",
-            EventErrorType::BadRequest(_) => "badRequest",
-            EventErrorType::Unauthorized(_) => "unauthorized",
-            EventErrorType::NotFound(_) => "notFound",
-            EventErrorType::Forbidden(_) => "forbidden",
-            EventErrorType::UserDenied(_) => "userDenied",
-            EventErrorType::ResourceDenied(_) => "resourceDenied",
-            EventErrorType::Expired(_) => "expired",
-            EventErrorType::Unknown(value, _) => value.as_str(),
+            Generic(_) => "error",
+            BadRequest(_) => "badRequest",
+            Unauthorized(_) => "unauthorized",
+            NotFound(_) => "notFound",
+            Forbidden(_) => "forbidden",
+            UserDenied(_) => "userDenied",
+            ResourceDenied(_) => "resourceDenied",
+            Expired(_) => "expired",
+            Unknown(value, _) => value.as_str(),
         }
     }
 
     pub fn value(&self) -> EventError {
         match self {
-            EventErrorType::Generic(err) => err.clone(),
-            EventErrorType::BadRequest(err) => err.clone(),
-            EventErrorType::Unauthorized(err) => err.clone(),
-            EventErrorType::NotFound(err) => err.clone(),
-            EventErrorType::Forbidden(err) => err.clone(),
-            EventErrorType::UserDenied(err) => err.clone(),
-            EventErrorType::ResourceDenied(err) => err.clone(),
-            EventErrorType::Expired(err) => err.clone(),
-            EventErrorType::Unknown(_value, err) => err.clone(),
+            Generic(err) => err.clone(),
+            BadRequest(err) => err.clone(),
+            Unauthorized(err) => err.clone(),
+            NotFound(err) => err.clone(),
+            Forbidden(err) => err.clone(),
+            UserDenied(err) => err.clone(),
+            ResourceDenied(err) => err.clone(),
+            Expired(err) => err.clone(),
+            Unknown(_value, err) => err.clone(),
         }
     }
 }
