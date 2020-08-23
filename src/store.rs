@@ -51,7 +51,7 @@ mod tests {
     #[test]
     fn test_can_add_event_handler() {
         let mut store = SimpleEventStore::new();
-        store.add("event:test", 1, |req| response_for(req, "ok"));
+        store.add("event:test", 1, |req| Ok(response_for(req, "ok")));
 
         let req = parse_event(r#"{
                     "name": "event:test",

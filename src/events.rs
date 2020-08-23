@@ -66,9 +66,9 @@ pub fn parse_event(payload: &str) -> Result<RequestEvent, serde_json::Error> {
 pub fn response_for<T: Serialize>(
     event: &RequestEvent,
     payload: T,
-) -> Result<ResponseEvent, EventErrorType> {
+) -> ResponseEvent {
     let evt = &event.0;
-    Ok(ResponseEvent(Event {
+    ResponseEvent(Event {
         name: format!("{}:{}", evt.name, "response"),
         version: evt.version,
         id: Uuid::from(evt.id),
@@ -77,5 +77,5 @@ pub fn response_for<T: Serialize>(
         identity: json!({}),
         auth: json!({}),
         metadata: json!({}),
-    }))
+    })
 }

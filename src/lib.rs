@@ -1,8 +1,8 @@
 mod errors;
-mod events;
 mod handlers;
-mod processor;
-mod store;
+pub mod events;
+pub mod processor;
+pub mod store;
 
 #[cfg(test)]
 mod tests {
