@@ -21,7 +21,7 @@ pub enum EventErrorType {
     UserDenied(EventError),
     ResourceDenied(EventError),
     Expired(EventError),
-    Unknown(String),
+    Unknown(String, EventError),
 }
 
 impl EventErrorType {
@@ -35,11 +35,11 @@ impl EventErrorType {
             "userDenied" => UserDenied(error),
             "resourceDenied" => ResourceDenied(error),
             "expired" => Expired(error),
-            _ => Unknown(String::from(error_type)),
+            _ => Unknown(String::from(error_type), error),
         }
     }
 
-    pub fn name(&self) -> &str {
+    pub fn error_type(&self) -> &str {
         match self {
             EventErrorType::Generic(_) => "error",
             EventErrorType::BadRequest(_) => "badRequest",
@@ -49,7 +49,7 @@ impl EventErrorType {
             EventErrorType::UserDenied(_) => "userDenied",
             EventErrorType::ResourceDenied(_) => "resourceDenied",
             EventErrorType::Expired(_) => "expired",
-            EventErrorType::Unknown(value) => value.as_str(),
+            EventErrorType::Unknown(value, _) => value.as_str(),
         }
     }
 
@@ -63,17 +63,14 @@ impl EventErrorType {
             EventErrorType::UserDenied(err) => err.clone(),
             EventErrorType::ResourceDenied(err) => err.clone(),
             EventErrorType::Expired(err) => err.clone(),
-            EventErrorType::Unknown(_value) => EventError {
-                code: String::from("UNKNOWN_ERROR"),
-                parameters: json!({}),
-            },
+            EventErrorType::Unknown(_value, err) => err.clone(),
         }
     }
 }
 
 impl Display for EventErrorType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "error type: {:?}, code: {:?}", self.name(), self.value().code)
+        write!(f, "error type: {:?}, code: {:?}", self.error_type(), self.value().code)
     }
 }
 
@@ -119,7 +116,7 @@ pub fn error_for(event: &RequestEvent, error: &EventErrorType) -> ResponseEvent 
     let evt = &event.0;
     let evt_error = error.value();
     ResponseEvent(Event {
-        name: format!("{}:{}", evt.name, error.name()),
+        name: format!("{}:{}", evt.name, error.error_type()),
         version: evt.version,
         id: evt.id,
         flow_id: evt.flow_id,

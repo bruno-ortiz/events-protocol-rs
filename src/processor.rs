@@ -56,13 +56,31 @@ mod tests {
                     "flowId": "cb745ef4-863b-41c4-99c7-325fe2b2b7f8",
                     "payload": {},
                     "metadata": {},
-                    "identity": {   },
+                    "identity": {},
                     "auth": {}
                 }"#;
 
         let response_event = event_processor.process_event(raw_event);
 
         assert_eq!("ok", response_event.0.payload.as_str().unwrap())
+    }
+
+    #[test]
+    fn test_cannot_parse_event() {
+        let mut store = SimpleEventStore::new();
+        let event_processor = EventProcessor::new(Box::new(store));
+
+        let raw_event = r#"{
+                    "name": "event:test",
+                 }"#;
+
+        let response_event = event_processor.process_event(raw_event);
+
+        assert!(response_event.is_error());
+        let error = response_event.get_error();
+
+        assert_eq!(error.error_type(), "badProtocol");
+        assert_eq!("INVALID_COMMUNICATION_PROTOCOL", error.value().code);
     }
 
     #[test]
@@ -94,7 +112,6 @@ mod tests {
         let error = response_event.get_error();
 
         assert_eq!("SOME_ERROR", error.value().code);
-
     }
 
     #[test]

@@ -41,12 +41,11 @@ impl ResponseEvent {
         let event = &self.0;
         let last_separator_idx = event.name
             .rfind(":")
-            .expect(&format!("Invalid error response name: {}", event.name));
+            .and_then(|idx| Some(idx + 1))
+            .unwrap_or(0);
 
-        let error_type = &event.name[(last_separator_idx + 1)..];
+        let error_type = &event.name[last_separator_idx..];
 
-        println!("len: {}", event.name.len());
-        println!("error type: {}", error_type);
         return EventErrorType::new(error_type, EventError {
             code: event.payload.get("code").unwrap().as_str().unwrap().into(),
             parameters: event.payload.get("parameters").unwrap().clone(),
