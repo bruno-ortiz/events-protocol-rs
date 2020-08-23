@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
-use crate::errors::Error;
 use crate::events::{RequestEvent, ResponseEvent};
 use crate::handlers::{EventHandler, FnForwardHandler};
 use std::ops::Deref;
+use crate::errors::EventErrorType;
 
 pub trait EventStore {
     fn handler_for(
@@ -25,7 +25,7 @@ impl<'a> SimpleEventStore<'a> {
     }
 
     pub fn add<T>(&mut self, name: &str, version: u16, handler: T)
-        where T: Fn(&RequestEvent) -> Result<ResponseEvent, Error> + 'a {
+        where T: Fn(&RequestEvent) -> Result<ResponseEvent, EventErrorType> + 'a {
         self.handlers.insert((String::from(name), version), Box::new(FnForwardHandler::new(handler)));
     }
 }
@@ -47,9 +47,6 @@ impl<'a> EventStore for SimpleEventStore<'a> {
 mod tests {
     use crate::events::{parse_event, response_for};
     use crate::store::{EventStore, SimpleEventStore};
-    use serde::export::fmt::Debug;
-    use crate::handlers::EventHandler;
-    use serde::export::Formatter;
 
     #[test]
     fn test_can_add_event_handler() {
@@ -80,7 +77,7 @@ mod tests {
 
     #[test]
     fn test_cannot_find_event_handler() {
-        let mut store = SimpleEventStore::new();
+        let store = SimpleEventStore::new();
         let option = store.handler_for("event:test", 1);
         assert!(option.is_none());
     }

@@ -1,54 +1,79 @@
 use crate::events::{Event, RequestEvent, ResponseEvent};
-use serde_json::json;
+use serde_json::{json, Value};
 use serde_json::Value::Null;
-use std::collections::HashMap;
 use uuid::Uuid;
 use std::fmt::{Debug, Display, Formatter};
+use crate::errors::EventErrorType::{Generic, Unknown, BadRequest, Unauthorized, NotFound, Forbidden, UserDenied, ResourceDenied, Expired};
 
-#[derive(Debug)]
-pub struct Error {
-    err: Box<EventError>,
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct EventError {
-    error_type: EventErrorType,
-    code: String,
-    parameters: HashMap<String, String>, //todo: rever valor do mapa
+    pub code: String,
+    pub parameters: Value,
 }
 
 #[derive(Debug)]
 pub enum EventErrorType {
-    Generic,
-    BadRequest,
-    Unauthorized,
-    NotFound,
-    Forbidden,
-    UserDenied,
-    ResourceDenied,
-    Expired,
+    Generic(EventError),
+    BadRequest(EventError),
+    Unauthorized(EventError),
+    NotFound(EventError),
+    Forbidden(EventError),
+    UserDenied(EventError),
+    ResourceDenied(EventError),
+    Expired(EventError),
     Unknown(String),
 }
 
 impl EventErrorType {
-    pub fn value(&self) -> &str {
+    pub fn new(error_type: &str, error: EventError) -> Self {
+        match error_type {
+            "error" => Generic(error),
+            "badRequest" => BadRequest(error),
+            "unauthorized" => Unauthorized(error),
+            "notFound" => NotFound(error),
+            "forbidden" => Forbidden(error),
+            "userDenied" => UserDenied(error),
+            "resourceDenied" => ResourceDenied(error),
+            "expired" => Expired(error),
+            _ => Unknown(String::from(error_type)),
+        }
+    }
+
+    pub fn name(&self) -> &str {
         match self {
-            EventErrorType::Generic => "error",
-            EventErrorType::BadRequest => "badRequest",
-            EventErrorType::Unauthorized => "unauthorized",
-            EventErrorType::NotFound => "notFound",
-            EventErrorType::Forbidden => "forbidden",
-            EventErrorType::UserDenied => "userDenied",
-            EventErrorType::ResourceDenied => "resourceDenied",
-            EventErrorType::Expired => "expired",
+            EventErrorType::Generic(_) => "error",
+            EventErrorType::BadRequest(_) => "badRequest",
+            EventErrorType::Unauthorized(_) => "unauthorized",
+            EventErrorType::NotFound(_) => "notFound",
+            EventErrorType::Forbidden(_) => "forbidden",
+            EventErrorType::UserDenied(_) => "userDenied",
+            EventErrorType::ResourceDenied(_) => "resourceDenied",
+            EventErrorType::Expired(_) => "expired",
             EventErrorType::Unknown(value) => value.as_str(),
+        }
+    }
+
+    pub fn value(&self) -> EventError {
+        match self {
+            EventErrorType::Generic(err) => err.clone(),
+            EventErrorType::BadRequest(err) => err.clone(),
+            EventErrorType::Unauthorized(err) => err.clone(),
+            EventErrorType::NotFound(err) => err.clone(),
+            EventErrorType::Forbidden(err) => err.clone(),
+            EventErrorType::UserDenied(err) => err.clone(),
+            EventErrorType::ResourceDenied(err) => err.clone(),
+            EventErrorType::Expired(err) => err.clone(),
+            EventErrorType::Unknown(_value) => EventError {
+                code: String::from("UNKNOWN_ERROR"),
+                parameters: json!({}),
+            },
         }
     }
 }
 
-impl Display for Error {
+impl Display for EventErrorType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "error type: {:?}, code: {:?}", self.err.error_type, self.err.code)
+        write!(f, "error type: {:?}, code: {:?}", self.name(), self.value().code)
     }
 }
 
@@ -90,11 +115,11 @@ pub fn bad_protocol(err: serde_json::Error) -> ResponseEvent {
     })
 }
 
-pub fn error_for(event: &RequestEvent, error: &Error) -> ResponseEvent {
+pub fn error_for(event: &RequestEvent, error: &EventErrorType) -> ResponseEvent {
     let evt = &event.0;
-    let evt_error = &error.err;
+    let evt_error = error.value();
     ResponseEvent(Event {
-        name: format!("{}:{}", evt.name, evt_error.error_type.value()),
+        name: format!("{}:{}", evt.name, error.name()),
         version: evt.version,
         id: evt.id,
         flow_id: evt.flow_id,

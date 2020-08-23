@@ -38,6 +38,9 @@ mod tests {
     use crate::processor::EventProcessor;
     use crate::store::SimpleEventStore;
     use crate::events::response_for;
+    use crate::errors::{EventErrorType, EventError};
+    use std::collections::HashMap;
+    use serde_json::{Value, json};
 
     #[test]
     fn test_can_process_event() {
@@ -63,8 +66,40 @@ mod tests {
     }
 
     #[test]
-    fn test_cannot_find_event_handler() {
+    fn test_can_process_event_with_generic_error() {
         let mut store = SimpleEventStore::new();
+        store.add("event:test", 1, |_req| {
+            Err(EventErrorType::Generic(EventError {
+                code: String::from("SOME_ERROR"),
+                parameters: json!({}),
+            }))
+        });
+
+        let event_processor = EventProcessor::new(Box::new(store));
+
+        let raw_event = r#"{
+                    "name": "event:test",
+                    "version": 1,
+                    "id": "f467e03c-abab-4c2f-b4cf-4871fd349c6e",
+                    "flowId": "cb745ef4-863b-41c4-99c7-325fe2b2b7f8",
+                    "payload": {},
+                    "metadata": {},
+                    "identity": {   },
+                    "auth": {}
+                }"#;
+
+        let response_event = event_processor.process_event(raw_event);
+
+        assert!(response_event.is_error());
+        let error = response_event.get_error();
+
+        assert_eq!("SOME_ERROR", error.value().code);
+
+    }
+
+    #[test]
+    fn test_cannot_find_event_handler() {
+        let store = SimpleEventStore::new();
         let event_processor = EventProcessor::new(Box::new(store));
 
         let raw_event = r#"{

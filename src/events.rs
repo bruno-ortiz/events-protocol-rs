@@ -1,11 +1,10 @@
-
 use serde::Deserialize;
 use serde::Serialize;
 use serde_json::json;
 use serde_json::Value;
 use uuid::Uuid;
+use crate::errors::{EventErrorType, EventError};
 
-use crate::errors::Error;
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -26,6 +25,35 @@ pub struct RequestEvent(pub Event);
 #[derive(Debug)]
 pub struct ResponseEvent(pub Event);
 
+impl ResponseEvent {
+    pub fn is_success(&self) -> bool {
+        self.0.name.ends_with(":response")
+    }
+
+    pub fn is_error(&self) -> bool {
+        !self.is_success()
+    }
+
+    pub fn get_error(&self) -> EventErrorType {
+        if !self.is_error() {
+            panic!("Cannot get error when the response is success")
+        }
+        let event = &self.0;
+        let last_separator_idx = event.name
+            .rfind(":")
+            .expect(&format!("Invalid error response name: {}", event.name));
+
+        let error_type = &event.name[(last_separator_idx + 1)..];
+
+        println!("len: {}", event.name.len());
+        println!("error type: {}", error_type);
+        return EventErrorType::new(error_type, EventError {
+            code: event.payload.get("code").unwrap().as_str().unwrap().into(),
+            parameters: event.payload.get("parameters").unwrap().clone(),
+        });
+    }
+}
+
 pub fn parse_event(payload: &str) -> Result<RequestEvent, serde_json::Error> {
     match serde_json::from_str::<Event>(payload) {
         Ok(event) => {
@@ -39,7 +67,7 @@ pub fn parse_event(payload: &str) -> Result<RequestEvent, serde_json::Error> {
 pub fn response_for<T: Serialize>(
     event: &RequestEvent,
     payload: T,
-) -> Result<ResponseEvent, Error> {
+) -> Result<ResponseEvent, EventErrorType> {
     let evt = &event.0;
     Ok(ResponseEvent(Event {
         name: format!("{}:{}", evt.name, "response"),
