@@ -1,6 +1,5 @@
-use crate::events::{Event, RequestEvent, ResponseEvent};
+use crate::events::{ RequestEvent, ResponseEvent};
 use serde_json::{json, Value};
-use serde_json::Value::Null;
 use uuid::Uuid;
 use std::fmt::{Debug, Display, Formatter};
 use crate::errors::EventErrorType::{Generic, Unknown, BadRequest, Unauthorized, NotFound, Forbidden, UserDenied, ResourceDenied, Expired};
@@ -75,27 +74,26 @@ impl Display for EventErrorType {
 }
 
 pub fn event_not_found(event: &RequestEvent) -> ResponseEvent {
-    let evt = &event.0;
-    ResponseEvent(Event {
+    ResponseEvent {
         name: String::from("eventNotFound"),
         version: 1,
-        id: evt.id,
-        flow_id: evt.flow_id,
+        id: event.id,
+        flow_id: event.flow_id,
         payload: json!({
             "code": "NO_EVENT_HANDLER_FOUND",
             "parameters": {
-                "event": event.0.name,
-                "version": event.0.version
+                "event": event.name,
+                "version": event.version
             }
         }),
         identity: json!({}),
         auth: json!({}),
         metadata: json!({}),
-    })
+    }
 }
 
 pub fn bad_protocol(err: serde_json::Error) -> ResponseEvent {
-    ResponseEvent(Event {
+    ResponseEvent {
         name: String::from("badProtocol"),
         version: 1,
         id: Uuid::new_v4(),
@@ -109,23 +107,22 @@ pub fn bad_protocol(err: serde_json::Error) -> ResponseEvent {
         identity: json!({}),
         auth: json!({}),
         metadata: json!({}),
-    })
+    }
 }
 
 pub fn error_for(event: &RequestEvent, error: &EventErrorType) -> ResponseEvent {
-    let evt = &event.0;
     let evt_error = error.value();
-    ResponseEvent(Event {
-        name: format!("{}:{}", evt.name, error.error_type()),
-        version: evt.version,
-        id: evt.id,
-        flow_id: evt.flow_id,
+    ResponseEvent {
+        name: format!("{}:{}", event.name, error.error_type()),
+        version: event.version,
+        id: event.id,
+        flow_id: event.flow_id,
         payload: json!({
             "code": evt_error.code,
             "parameters": evt_error.parameters
         }),
-        identity: Null,
-        auth: Null,
-        metadata: Null,
-    })
+        identity: json!({}),
+        auth: json!({}),
+        metadata: json!({}),
+    }
 }

@@ -72,7 +72,7 @@ mod tests {
 
         assert!(result.is_ok(), "Error executing handler. Error: {:?}", result);
         let response = result.unwrap();
-        assert_eq!("ok", response.0.payload.as_str().unwrap())
+        assert_eq!("ok", response.payload.as_str().unwrap())
     }
 
     #[test]

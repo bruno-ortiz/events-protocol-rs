@@ -16,8 +16,7 @@ impl EventProcessor {
     pub fn process_event(&self, payload: &str) -> ResponseEvent {
         match parse_event(payload) {
             Ok(event) => {
-                let evt = &event.0;
-                let option_handler = self.store.handler_for(evt.name.as_str(), evt.version);
+                let option_handler = self.store.handler_for(event.name.as_str(), event.version);
                 if let Some(handler) = option_handler {
                     match handler.handle(&event) {
                         Ok(response) => response,
@@ -64,7 +63,7 @@ mod tests {
 
         let response_event = event_processor.process_event(raw_event);
 
-        assert_eq!("ok", response_event.0.payload.as_str().unwrap())
+        assert_eq!("ok", response_event.payload.as_str().unwrap())
     }
 
     #[test]
@@ -391,8 +390,8 @@ mod tests {
 
         let response_event = event_processor.process_event(raw_event);
 
-        assert_eq!(String::from("eventNotFound"), response_event.0.name);
-        assert_eq!("NO_EVENT_HANDLER_FOUND", response_event.0.payload.as_object().unwrap().get("code").unwrap());
+        assert_eq!(String::from("eventNotFound"), response_event.name);
+        assert_eq!("NO_EVENT_HANDLER_FOUND", response_event.payload.as_object().unwrap().get("code").unwrap());
     }
 }
 
