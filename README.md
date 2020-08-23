@@ -48,7 +48,7 @@ println!("{}", serde_json::to_string(&response_event).unwrap())
 
 ```
 
-The above code will print:
+The code above will print:
 ```json
 {
   "name": "event:test:response",
