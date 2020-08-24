@@ -1,5 +1,5 @@
 mod errors;
-mod handlers;
 pub mod events;
+mod handlers;
 pub mod processor;
 pub mod store;

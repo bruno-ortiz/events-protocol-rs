@@ -1,16 +1,12 @@
 use std::collections::HashMap;
 
+use crate::errors::EventErrorType;
 use crate::events::{RequestEvent, ResponseEvent};
 use crate::handlers::{EventHandler, FnForwardHandler};
 use std::ops::Deref;
-use crate::errors::EventErrorType;
 
 pub trait EventStore {
-    fn handler_for(
-        &self,
-        event_name: &str,
-        version: u16,
-    ) -> Option<&dyn EventHandler>;
+    fn handler_for(&self, event_name: &str, version: u16) -> Option<&dyn EventHandler>;
 }
 
 pub struct SimpleEventStore<'a> {
@@ -25,17 +21,18 @@ impl<'a> SimpleEventStore<'a> {
     }
 
     pub fn add<T>(&mut self, name: &str, version: u16, handler: T)
-        where T: Fn(&RequestEvent) -> Result<ResponseEvent, EventErrorType> + 'a {
-        self.handlers.insert((String::from(name), version), Box::new(FnForwardHandler::new(handler)));
+    where
+        T: Fn(&RequestEvent) -> Result<ResponseEvent, EventErrorType> + 'a,
+    {
+        self.handlers.insert(
+            (String::from(name), version),
+            Box::new(FnForwardHandler::new(handler)),
+        );
     }
 }
 
 impl<'a> EventStore for SimpleEventStore<'a> {
-    fn handler_for(
-        &self,
-        event_name: &str,
-        version: u16,
-    ) -> Option<&dyn EventHandler> {
+    fn handler_for(&self, event_name: &str, version: u16) -> Option<&dyn EventHandler> {
         match self.handlers.get(&(String::from(event_name), version)) {
             Some(handler) => Some(handler.deref()),
             None => None,
@@ -59,7 +56,8 @@ mod tests {
         let mut store = SimpleEventStore::new();
         store.add("event:test", 1, |req| Ok(response_for(req, "ok")));
 
-        let req = parse_event(r#"{
+        let req = parse_event(
+            r#"{
                     "name": "event:test",
                     "version": 1,
                     "id": "f467e03c-abab-4c2f-b4cf-4871fd349c6e",
@@ -68,7 +66,9 @@ mod tests {
                     "metadata": {},
                     "identity": {   },
                     "auth": {}
-                }"#).unwrap();
+                }"#,
+        )
+        .unwrap();
 
         let option = store.handler_for("event:test", 1);
         assert!(option.is_some(), "Could no find event handler");
@@ -76,7 +76,11 @@ mod tests {
         let handler = option.unwrap();
         let result = handler.handle(&req);
 
-        assert!(result.is_ok(), "Error executing handler. Error: {:?}", result);
+        assert!(
+            result.is_ok(),
+            "Error executing handler. Error: {:?}",
+            result
+        );
         let response = result.unwrap();
         assert_eq!("ok", response.payload.as_str().unwrap())
     }

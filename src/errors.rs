@@ -1,8 +1,11 @@
-use crate::events::{ RequestEvent, ResponseEvent};
+use crate::errors::EventErrorType::{
+    BadRequest, Expired, Forbidden, Generic, NotFound, ResourceDenied, Unauthorized, Unknown,
+    UserDenied,
+};
+use crate::events::{RequestEvent, ResponseEvent};
 use serde_json::{json, Value};
-use uuid::Uuid;
 use std::fmt::{Debug, Display, Formatter};
-use crate::errors::EventErrorType::{Generic, Unknown, BadRequest, Unauthorized, NotFound, Forbidden, UserDenied, ResourceDenied, Expired};
+use uuid::Uuid;
 
 #[derive(Debug, Clone)]
 pub struct EventError {
@@ -69,7 +72,12 @@ impl EventErrorType {
 
 impl Display for EventErrorType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "error type: {:?}, code: {:?}", self.error_type(), self.value().code)
+        write!(
+            f,
+            "error type: {:?}, code: {:?}",
+            self.error_type(),
+            self.value().code
+        )
     }
 }
 

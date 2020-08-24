@@ -1,10 +1,9 @@
+use crate::errors::{EventError, EventErrorType};
 use serde::Deserialize;
 use serde::Serialize;
 use serde_json::json;
 use serde_json::Value;
 use uuid::Uuid;
-use crate::errors::{EventErrorType, EventError};
-
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -45,17 +44,17 @@ impl ResponseEvent {
         if !self.is_error() {
             panic!("Cannot get error when the response is success")
         }
-        let last_separator_idx = self.name
-            .rfind(':')
-            .map(|idx| idx + 1)
-            .unwrap_or(0);
+        let last_separator_idx = self.name.rfind(':').map(|idx| idx + 1).unwrap_or(0);
 
         let error_type = &self.name[last_separator_idx..];
 
-        EventErrorType::new(error_type, EventError {
-            code: self.payload.get("code").unwrap().as_str().unwrap().into(),
-            parameters: self.payload.get("parameters").unwrap().clone(),
-        })
+        EventErrorType::new(
+            error_type,
+            EventError {
+                code: self.payload.get("code").unwrap().as_str().unwrap().into(),
+                parameters: self.payload.get("parameters").unwrap().clone(),
+            },
+        )
     }
 }
 
@@ -69,10 +68,7 @@ pub fn parse_event(payload: &str) -> Result<RequestEvent, serde_json::Error> {
     }
 }
 
-pub fn response_for<T: Serialize>(
-    event: &RequestEvent,
-    payload: T,
-) -> ResponseEvent {
+pub fn response_for<T: Serialize>(event: &RequestEvent, payload: T) -> ResponseEvent {
     ResponseEvent {
         name: format!("{}:{}", event.name, "response"),
         version: event.version,

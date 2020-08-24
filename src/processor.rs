@@ -8,9 +8,7 @@ pub struct EventProcessor {
 
 impl EventProcessor {
     pub fn new(store: Box<dyn EventStore>) -> Self {
-        EventProcessor {
-            store,
-        }
+        EventProcessor { store }
     }
 
     pub fn process_event(&self, payload: &str) -> ResponseEvent {
@@ -31,17 +29,18 @@ impl EventProcessor {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use serde_json::json;
 
+    use crate::errors::EventErrorType::{
+        Expired, Forbidden, NotFound, ResourceDenied, Unknown, UserDenied,
+    };
     use crate::errors::{EventError, EventErrorType};
     use crate::events::response_for;
     use crate::processor::EventProcessor;
     use crate::store::SimpleEventStore;
-    use EventErrorType::{Unauthorized, BadRequest};
-    use crate::errors::EventErrorType::{NotFound, Forbidden, UserDenied, ResourceDenied, Expired, Unknown};
+    use EventErrorType::{BadRequest, Unauthorized};
 
     #[test]
     fn test_can_process_event() {
@@ -344,10 +343,13 @@ mod tests {
     fn test_can_process_event_with_unknown_error() {
         let mut store = SimpleEventStore::new();
         store.add("event:test", 1, |_req| {
-            Err(Unknown(String::from("xpto"), EventError {
-                code: String::from("SOME_ERROR"),
-                parameters: json!({}),
-            }))
+            Err(Unknown(
+                String::from("xpto"),
+                EventError {
+                    code: String::from("SOME_ERROR"),
+                    parameters: json!({}),
+                },
+            ))
         });
 
         let event_processor = EventProcessor::new(Box::new(store));
@@ -391,7 +393,14 @@ mod tests {
         let response_event = event_processor.process_event(raw_event);
 
         assert_eq!(String::from("eventNotFound"), response_event.name);
-        assert_eq!("NO_EVENT_HANDLER_FOUND", response_event.payload.as_object().unwrap().get("code").unwrap());
+        assert_eq!(
+            "NO_EVENT_HANDLER_FOUND",
+            response_event
+                .payload
+                .as_object()
+                .unwrap()
+                .get("code")
+                .unwrap()
+        );
     }
 }
-

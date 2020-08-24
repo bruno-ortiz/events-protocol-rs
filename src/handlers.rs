@@ -17,7 +17,9 @@ impl<T: Fn(&RequestEvent) -> Result<ResponseEvent, EventErrorType>> FnForwardHan
     }
 }
 
-impl<T: Fn(&RequestEvent) -> Result<ResponseEvent, EventErrorType>> EventHandler for FnForwardHandler<T> {
+impl<T: Fn(&RequestEvent) -> Result<ResponseEvent, EventErrorType>> EventHandler
+    for FnForwardHandler<T>
+{
     fn handle(&self, event: &RequestEvent) -> Result<ResponseEvent, EventErrorType> {
         (self.fn_handler)(event)
     }
