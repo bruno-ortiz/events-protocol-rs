@@ -43,6 +43,12 @@ impl<'a> EventStore for SimpleEventStore<'a> {
     }
 }
 
+impl<'a> Default for SimpleEventStore<'a> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::events::{parse_event, response_for};

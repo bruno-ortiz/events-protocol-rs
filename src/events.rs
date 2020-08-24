@@ -46,16 +46,16 @@ impl ResponseEvent {
             panic!("Cannot get error when the response is success")
         }
         let last_separator_idx = self.name
-            .rfind(":")
-            .and_then(|idx| Some(idx + 1))
+            .rfind(':')
+            .map(|idx| idx + 1)
             .unwrap_or(0);
 
         let error_type = &self.name[last_separator_idx..];
 
-        return EventErrorType::new(error_type, EventError {
+        EventErrorType::new(error_type, EventError {
             code: self.payload.get("code").unwrap().as_str().unwrap().into(),
             parameters: self.payload.get("parameters").unwrap().clone(),
-        });
+        })
     }
 }
 
@@ -76,8 +76,8 @@ pub fn response_for<T: Serialize>(
     ResponseEvent {
         name: format!("{}:{}", event.name, "response"),
         version: event.version,
-        id: Uuid::from(event.id),
-        flow_id: Uuid::from(event.flow_id),
+        id: event.id,
+        flow_id: event.flow_id,
         payload: serde_json::to_value(payload).unwrap(), //todo: remove this unwrap?
         identity: json!({}),
         auth: json!({}),
