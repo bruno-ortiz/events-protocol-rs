@@ -55,15 +55,13 @@ The code above will print:
   "version": 1,
   "id": "f467e03c-abab-4c2f-b4cf-4871fd349c6e",
   "flowId": "cb745ef4-863b-41c4-99c7-325fe2b2b7f8",
-  "payload": {
-    "bar": "Bar"
-  },
+  "payload": "Event processed successfully",
   "identity": {},
   "auth": {},
   "metadata": {}
 }
 ```
-##TODOS
+## TODOS
  * describe events format
  * decribe event errors
  * Integrate with opentelemetry to generate traces automatically
